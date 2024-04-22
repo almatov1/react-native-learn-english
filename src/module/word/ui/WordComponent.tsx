@@ -1,6 +1,6 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
-import { Keyboard, View, Image, Pressable } from 'react-native';
+import { Keyboard, View, Image, Pressable, TouchableOpacity } from 'react-native';
 import { RootStackParamList } from '../../../core/route/RouteParams';
 import { CodeField } from 'react-native-confirmation-code-field';
 import * as Speech from 'expo-speech';
@@ -9,34 +9,56 @@ import TemplateConfig from '../../../core/config/TemplateConfig';
 import TextComponent from '../../shared/ui/TextComponent';
 import RetirementComponent from '../../shared/RetirementComponent';
 import ButtonComponent from '../../shared/ui/ButtonComponent';
-import ViewComponent from './ViewComponent';
 import { Audio } from 'expo-av';
+import NotifyComponent from './NotifyComponent';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ApplicationConfig from '../../../core/config/ApplicationConfig';
 
 type WordComponentProps = NativeStackScreenProps<RootStackParamList, 'Word'>;
 const WordComponent = ({ navigation }: WordComponentProps) => {
+    // init
+    const [hidedWord, setHidedWord] = useState(ApplicationConfig.beginnerWords[0]);
+    useEffect(() => {
+        findNewWord();
+    }, []);
+    async function findNewWord() {
+        const value = await AsyncStorage.getItem('words');
+        if (ApplicationConfig.allWords[Number(value)]) setHidedWord(ApplicationConfig.allWords[Number(value)]);
+    }
+
     // input
     const [word, setWord] = useState('');
     useEffect(() => {
-        if (word.length === 5)
-            if (word.toLowerCase() !== 'apple') {
+        async function saveItem() {
+            const value = await AsyncStorage.getItem('words') ?? '0';
+            await AsyncStorage.setItem('words', (Number(value) + 1).toString());
+            await findNewWord();
+            setWord('');
+            setSuccessModal(true);
+        }
+
+        if (word.length === hidedWord.word.length)
+            if (word.toLowerCase() !== hidedWord.word.toLowerCase()) {
                 playError();
                 setWord('');
             }
             else {
-                playCorrent();
                 Keyboard.dismiss();
+                saveItem();
+                playCorrent();
             }
     }, [word]);
 
     // sound
     const speak = () => {
-        Speech.speak("apple", {
+        Speech.speak(hidedWord.word, {
             language: "en-GB"
         });
     };
 
     // modal
     const [modal, setModal] = useState(false);
+    const [successModal, setSuccessModal] = useState(false);
 
     // sound
     async function playCorrent() {
@@ -51,7 +73,7 @@ const WordComponent = ({ navigation }: WordComponentProps) => {
     // widgets
     const SpeakBlock = () => {
         return (
-            <Pressable onPress={speak}>
+            <TouchableOpacity onPress={speak}>
                 <View style={{
                     backgroundColor: TemplateConfig.blueColor,
                     borderRadius: TemplateConfig.radius,
@@ -68,7 +90,7 @@ const WordComponent = ({ navigation }: WordComponentProps) => {
                         resizeMode: 'cover'
                     }} />
                 </View>
-            </Pressable>
+            </TouchableOpacity>
         )
     }
     const InfoBlock = () => {
@@ -88,7 +110,7 @@ const WordComponent = ({ navigation }: WordComponentProps) => {
                 <View style={{ alignItems: 'center' }}>
                     <TextComponent size={TemplateConfig.extraLargeFontSize} weight={TemplateConfig.semiboldText}>Перевод слова:</TextComponent>
                     <RetirementComponent />
-                    <TextComponent size={TemplateConfig.largeFontSize} >Яблоко</TextComponent>
+                    <TextComponent size={TemplateConfig.largeFontSize} >{hidedWord.translate}</TextComponent>
                 </View>
             </View>
         );
@@ -96,10 +118,11 @@ const WordComponent = ({ navigation }: WordComponentProps) => {
     const BottomBlock = () => {
         return (
             <View>
-                <ButtonComponent backgroundColor={TemplateConfig.pinkColor} onPress={() => console.log("next")}>
-                    Пропустить слово
+                <ButtonComponent backgroundColor={TemplateConfig.pinkColor} onPress={() => navigation.navigate("Home")}>
+                    Вернуться домой
                 </ButtonComponent>
-                <ViewComponent open={modal} onDismiss={() => setModal(false)} word="apple" />
+                <NotifyComponent open={modal} onDismiss={() => setModal(false)} value={hidedWord.word} />
+                <NotifyComponent open={successModal} onDismiss={() => setSuccessModal(false)} value="Верно! +1" />
             </View>
         );
     }
@@ -125,7 +148,7 @@ const WordComponent = ({ navigation }: WordComponentProps) => {
                         value={word}
                         onChangeText={setWord}
                         textContentType="name"
-                        cellCount={5}
+                        cellCount={hidedWord.word.length}
                         keyboardType="default"
                         renderCell={({ index, symbol, isFocused }) => (
                             <View

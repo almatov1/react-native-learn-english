@@ -1,7 +1,9 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useRef } from 'react';
-import { View, Image, SafeAreaView, Animated } from 'react-native';
-import storage from '../../../core/config/StorageConfig';
+import { useEffect, useRef, useState } from 'react';
+import { View, Image, Animated } from 'react-native';
+import ApplicationConfig from '../../../core/config/ApplicationConfig';
 import TemplateConfig from '../../../core/config/TemplateConfig';
 import { RootStackParamList } from '../../../core/route/RouteParams';
 import ButtonComponent from '../../shared/ui/ButtonComponent';
@@ -10,6 +12,17 @@ import WrapperComponent from '../../shared/ui/WrapperComponent';
 
 type HomeComponentProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
 const HomeComponent = ({ navigation }: HomeComponentProps) => {
+    // learned words
+    const [learned, setLearned] = useState('0');
+    useFocusEffect(() => {
+        async function loadStorage() {
+            const value = await AsyncStorage.getItem('words');
+            if (value) { setLearned(value); }
+        }
+
+        loadStorage();
+    });
+
     // animate
     const value = useRef(new Animated.Value(0)).current;
     const animate = () => {
@@ -28,7 +41,7 @@ const HomeComponent = ({ navigation }: HomeComponentProps) => {
             <View style={{
                 alignItems: 'center'
             }}>
-                <Image source={require('../../../../assets/image/home/cat.jpg')} style={{
+                <Image source={require('../../../../assets/image/home/cat.png')} style={{
                     width: 200,
                     height: 200,
                     resizeMode: 'cover'
@@ -44,10 +57,10 @@ const HomeComponent = ({ navigation }: HomeComponentProps) => {
     }
     const InfoBlock = () => {
         const words = [
-            { label: "Слова уровня Beginner", value: "650" },
-            { label: "Слова уровня Intermediate", value: "340" },
-            { label: "Слова уровня Advanced", value: "120" },
-            { label: "Изучено", value: "0" }
+            { label: "Слова уровня Beginner", value: ApplicationConfig.beginnerWords.length.toString() },
+            { label: "Слова уровня Intermediate", value: ApplicationConfig.intermediateWords.length.toString() },
+            { label: "Слова уровня Advanced", value: ApplicationConfig.advancedWords.length.toString() },
+            { label: "Изучено", value: learned }
         ]
         return (
             <View>
@@ -89,29 +102,6 @@ const HomeComponent = ({ navigation }: HomeComponentProps) => {
             <HeaderBlock />
             <InfoBlock />
             <StartBlock />
-            {/* <Button
-                onPress={() => storage.save({
-                    key: 'xyz',
-                    data: {
-                        text: 'hello'
-                    }
-                })}
-                title="Save Store"
-                color="#841584"
-                accessibilityLabel="Learn more about this purple button"
-            />
-            <Button
-                onPress={() => storage
-                    .load({
-                        key: 'xyz'
-                    })
-                    .then(ret => {
-                        alert(`${ret.text} TUPOI`)
-                    })}
-                title="Shoe Store"
-                color="#841584"
-                accessibilityLabel="Learn more about this purple button"
-            /> */}
         </WrapperComponent>
     )
 };

@@ -4,10 +4,10 @@
     "slug": "LearnEnglish",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/image/shared/icon.png",
+    "icon": "./assets/image/home/cat.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/image/shared/splash.png",
+      "image": "./assets/image/home/cat.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -19,12 +19,18 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/image/shared/adaptive-icon.png",
+        "foregroundImage": "./assets/image/home/cat.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.almatov1.LearnEnglish"
     },
     "web": {
-      "favicon": "./assets/image/shared/favicon.png"
+      "favicon": "./assets/image/home/cat.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "72adf032-ad33-4189-a540-9cf0fb1925b9"
+      }
     }
   }
 }
